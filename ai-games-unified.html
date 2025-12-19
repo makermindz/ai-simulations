@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Games Collection</title>
+    <style>
+        /* --- GLOBAL STYLES --- */
+        :root {
+            --primary-color: #2ecc71;
+            --secondary-color: #27ae60;
+            --bg-color: #f4f4f4;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* --- NAVIGATION TABS --- */
+        .nav-bar {
+            background-color: #fff;
+            width: 100%;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--primary-color);
+            background: white;
+            color: var(--secondary-color);
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* --- GAME CONTAINER --- */
+        .game-tab {
+            display: none; /* Hidden by default */
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+            padding-bottom: 50px;
+        }
+
+        .game-tab.active {
+            display: flex;
+        }
+
+        .game-wrapper {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 95%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 { color: var(--secondary-color); text-align: center; margin-top: 0; }
+        .main-content { display: flex; gap: 30px; flex-wrap: wrap; }
+        .left-column { flex: 1; min-width: 300px; }
+        .viz-column { flex: 2; min-width: 300px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Common Button Style */
+        button.action-btn {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button.action-btn:hover { background-color: var(--secondary-color); }
+        button.action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* --- SPECIFIC GAME STYLES (SCOPED) --- */
+
+        /* 1. SIMPLIFIED K-MEANS */
+        #tab-simple-k .data-point {
+            position: absolute; width: 8px; height: 8px; border-radius: 50%; background-color: #34495e; z-index: 10;
+        }
+        #tab-simple-k .centroid {
+            position: absolute; width: 20px; height: 20px; border-radius: 50%; font-weight: bold; text-align: center; line-height: 18px; color: white; border: 2px solid black; cursor: pointer; z-index: 20; transition: transform 0.5s;
+        }
+        #tab-simple-k .c0 { background-color: #e74c3c; border-color: #c0392b; }
+        #tab-simple-k .c1 { background-color: #3498db; border-color: #2980b9; }
+        #tab-simple-k .c2 { background-color: #f1c40f; border-color: #f39c12; }
+        #tab-simple-k .cluster-0 { background-color: #e74c3c; }
+        #tab-simple-k .cluster-1 { background-color: #3498db; }
+        #tab-simple-k .cluster-2 { background-color: #f1c40f; }
+        #tab-simple-k #vizContainer_sk {
+            width: 400px; height: 400px; border: 2px solid var(--primary-color); background-color: #ecf0f1; position: relative; cursor: crosshair;
+        }
+
+        /* 2. NEURAL NETWORK */
+        #tab-neural .data-point {
+            position: absolute; width: 30px; height: 30px; border-radius: 50%; border: 4px solid black; box-sizing: border-box; font-size: 14px; text-align: center; line-height: 22px; font-weight: bold; color: white; z-index: 10; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        #tab-neural .target-0 { background-color: #e74c3c; }
+        #tab-neural .target-1 { background-color: #3498db; }
+        #tab-neural .misclassified { border-color: #f39c12; box-shadow: 0 0 12px rgba(243, 156, 18, 0.9); }
+        #tab-neural .correctly-classified { border-color: #2ecc71; box-shadow: 0 0 12px rgba(46, 204, 113, 0.9); }
+        #tab-neural #vizContainer_nn {
+            width: 400px; height: 400px; border: 2px solid #3498db; background-color: #ecf0f1; position: relative;
+        }
+        #tab-neural .goal-fail { background-color: #fbe6e6; color: #e74c3c; padding: 10px; border-radius: 4px; text-align: center; }
+        #tab-neural .goal-success { background-color: #e6fbe6; color: #2ecc71; padding: 10px; border-radius: 4px; text-align: center; }
+
+        /* 3. KNN */
+        #tab-knn .data-point {
+            position: absolute; width: 12px; height: 12px; border-radius: 50%; border: 1px solid #333; box-sizing: border-box; transition: background-color 0.3s; z-index: 10;
+        }
+        #tab-knn .unlabeled { background-color: #aaa; border-color: #777; }
+        #tab-knn .class-A { background-color: #e74c3c; border-color: #c0392b; }
+        #tab-knn .class-B { background-color: #3498db; border-color: #2980b9; }
+        #tab-knn .misclassified { border-color: orange; border-width: 3px; }
+        #tab-knn #vizContainer_knn {
+            width: 500px; height: 500px; border: 2px solid #4caf50; background-color: #ecf0f1; position: relative; cursor: pointer;
+        }
+        #tab-knn #status_knn { padding: 10px; border-radius: 6px; text-align: center; font-weight: bold; width: 90%; margin-bottom: 10px; }
+        #tab-knn .unsolved { background-color: #fff3cd; color: #856404; }
+        #tab-knn .solved { background-color: #d4edda; color: #155724; }
+        #tab-knn .fail { background-color: #f8d7da; color: #721c24; }
+
+        /* 4. HEURISTIC (A*) */
+        #tab-astar #grid-container_astar {
+            display: grid; border: 2px solid #4caf50; box-shadow: 0 0 10px rgba(230, 126, 34, 0.5);
+        }
+        #tab-astar .grid-cell { width: 100%; height: 100%; background-color: #ecf0f1; border: 1px solid #bdc3c7; box-sizing: border-box; }
+        #tab-astar .start { background-color: #2ecc71 !important; }
+        #tab-astar .goal { background-color: #e74c3c !important; }
+        #tab-astar .obstacle { background-color: #34495e !important; }
+        #tab-astar .path { background-color: #f1c40f !important; }
+        #tab-astar .visited { background-color: #3498db !important; opacity: 0.5; }
+
+        /* 5. MANUAL CLUSTERING */
+        #tab-manual-k #vizContainer_mk {
+            width: 500px; height: 500px; border: 2px solid #388e3c; background-color: #fff; position: relative; cursor: crosshair;
+        }
+        #tab-manual-k .data-point {
+            position: absolute; width: 8px; height: 8px; border-radius: 50%; background-color: #607d8b; border: 1px solid #333; transition: background-color 0.5s;
+        }
+        #tab-manual-k .centroid {
+            position: absolute; width: 16px; height: 16px; border-radius: 50%; border: 3px solid #000; display: flex; justify-content: center; align-items: center; font-size: 0.8em; font-weight: bold; pointer-events: none; z-index: 10;
+        }
+        #tab-manual-k .color-0 { background-color: #f44336; border-color: #c62828; }
+        #tab-manual-k .color-1 { background-color: #2196f3; border-color: #1565c0; }
+        #tab-manual-k .color-2 { background-color: #ffc107; border-color: #ff8f00; }
+        #tab-manual-k .color-3 { background-color: #4caf50; border-color: #2e7d32; }
+        #tab-manual-k .color-4 { background-color: #9c27b0; border-color: #6a1b9a; }
+        #tab-manual-k .color-5 { background-color: #795548; border-color: #5d4037; }
+        #tab-manual-k #status_mk { padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 10px; }
+        #tab-manual-k .setup { background-color: #fffde7; color: #fbc02d; }
+        #tab-manual-k .unsolved { background-color: #fff9c4; color: #ff9800; }
+        #tab-manual-k .solved { background-color: #c8e6c9; color: #2e7d32; }
+        #tab-manual-k .fail { background-color: #ffcdd2; color: #c62828; }
+
+        /* 6. LOGIC GATE */
+        #tab-logic .truth-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        #tab-logic th, #tab-logic td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        #tab-logic th { background-color: var(--primary-color); color: white; }
+        #tab-logic .output-current { background-color: #ffe0b2; }
+        #tab-logic .output-target { border-left: 3px solid var(--secondary-color); background-color: #e0f2f1; }
+        #tab-logic .correct { background-color: #27ae66; color: white; }
+        #tab-logic .incorrect { background-color: #e74c3c; color: white; }
+        #tab-logic #challenge-display_lg { text-align: center; padding: 10px; border: 2px dashed #34495e; border-radius: 6px; margin-bottom: 10px; }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .main-content { flex-direction: column; }
+            .left-column, .viz-column { width: 100%; }
+            #vizContainer_sk, #vizContainer_nn, #vizContainer_knn, #vizContainer_mk, #grid-container_astar {
+                width: 100% !important; height: 350px !important;
+            }
+        }
+        ul, ol { padding-left: 20px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="nav-bar">
+        <button class="nav-btn active" onclick="switchTab('tab-simple-k')">Simplified K-Means</button>
+        <button class="nav-btn" onclick="switchTab('tab-neural')">Neural Network</button>
+        <button class="nav-btn" onclick="switchTab('tab-knn')">k-Nearest Neighbors</button>
+        <button class="nav-btn" onclick="switchTab('tab-astar')">A* Pathfinding</button>
+        <button class="nav-btn" onclick="switchTab('tab-manual-k')">Manual Clustering</button>
+        <button class="nav-btn" onclick="switchTab('tab-logic')">Logic Gates</button>
+    </nav>
+
+    <!-- 1. SIMPLIFIED K-MEANS -->
+    <div id="tab-simple-k" class="game-tab active">
+        <div class="game-wrapper">
+            <h1>Simplified K-Means Clustering (K=3)</h1>
+            <div class="main-content">
+                <div class="left-column">
+                    <div style="background:#f8f8f8; padding:15px; border-radius:8px; border:2px solid var(--primary-color); margin-bottom:20px;">
+                        <h3>Game Objective:</h3>
+                        <p>Place the three Centroids (C1, C2, C3) correctly on the map.</p>
+                        <p>Then, run the K-Means Algorithm by clicking Iterate. The goal is to reach the lowest possible Inertia in the fewest steps.</p>
+                        <p>The initial placement is critical!</p>
+                    </div>
+                    <div style="background:#f8f8f8; padding:15px; border-radius:8px; border:2px solid var(--primary-color);">
+                        <h3>Controls</h3>
+                        <p>Centroids needed: <span id="centroidsNeeded_sk" style="font-weight:bold; color:var(--secondary-color)">3</span></p>
+                        <button class="action-btn" id="iterateButton_sk" disabled>Iterate K-Means (1 Step)</button>
+                        <button class="action-btn" id="resetButton_sk">New Challenge</button>
+                        <div style="margin-top:20px;">
+                            <p>Steps: <span id="stepCount_sk" style="font-weight:bold">0</span></p>
+                            <p>Inertia: <span id="inertiaValue_sk" style="font-weight:bold">N/A</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="viz-column">
+                    <h3>Data Visualization</h3>
+                    <div id="vizContainer_sk"></div>
+                    <p>Status: <span id="statusText_sk" style="font-weight:bold">Click to place Centroid 1...</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. NEURAL NETWORK -->
+    <div id="tab-neural" class="game-tab">
+        <div class="game-wrapper">
+            <h1>Neural Network Playground</h1>
+            <div class="main-content">
+                <div class="left-column">
+                    <p>Your goal is to adjust the "Weights" and "Bias" until all four data points are "correctly classified" (i.e., every point has a "Green Border").</p>
+                    <hr>
+                    <div style="margin-bottom:15px;">
+                        <label>Weight 1 (W1): <span id="w1Value_nn">0.50</span></label>
+                        <input type="range" id="w1_nn" min="-1.5" max="1.5" step="0.01" value="0.5" style="width:100%">
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label>Weight 2 (W2): <span id="w2Value_nn">0.50</span></label>
+                        <input type="range" id="w2_nn" min="-1.5" max="1.5" step="0.01" value="0.5" style="width:100%">
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <label>Bias (B): <span id="biasValue_nn">-0.50</span></label>
+                        <input type="range" id="bias_nn" min="-1.5" max="1.5" step="0.01" value="-0.5" style="width:100%">
+                    </div>
+                    <hr>
+                    <h3>Understanding the Feedback</h3>
+                    <ul>
+                        <li>Blue/Red Background: This is the point's fixed "Target Class" (Blue=1, Red=0).</li>
+                        <li>Green Border: Your network's prediction matches the Target Class.</li>
+                        <li>Orange Border: Your network's prediction MISMATCHES the Target Class.</li>
+                    </ul>
+                    <div style="background:#f8f8f8; padding:15px; border-radius:8px; margin-top:20px;">
+                        <div>Accuracy: <span id="accuracy_nn" style="font-weight:bold; color:var(--primary-color)">0%</span></div>
+                        <div id="goalStatus_nn" class="goal-fail">Keep adjusting!</div>
+                    </div>
+                    <button class="action-btn" id="resetButton_nn">Reset Parameters</button>
+                    <button class="action-btn" id="solveButton_nn" style="background-color: #f39c12;">Show Solution</button>
+                </div>
+                <div class="viz-column">
+                    <h3>Classification Visualization</h3>
+                    <div id="vizContainer_nn"></div>
+                    <p>Blue = Target 1, Red = Target 0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. KNN -->
+    <div id="tab-knn" class="game-tab">
+        <div class="game-wrapper">
+            <h1>k-Nearest Neighbors (k-NN)</h1>
+            <div class="main-content">
+                <div class="left-column">
+                    <p>k-NN is a method used to predict the value of a new data point based on the values of its 'k' nearest neighbors. It is a simple and effective way to make predictions without needing to learn a complex model. For example, if you have a list of fruits and you want to predict if a new fruit is a banana or an apple, you would look at the fruits that are closest to the new fruit and see if the majority are bananas or apples.</p>
+                    <hr>
+                    <h3>How it Works:</h3>
+                    <p>1. When you label a point, it acts as a reference point.</p>
+                    <p>2. Every unlabeled (grey) point looks at its "5 nearest labeled neighbors" (k=5).</p>
+                    <p>3. It takes the "majority vote" (e.g., 3 Blue, 2 Red = Predict Blue).</p>
+                    <p>4. Your goal: Achieve 100% accuracy with minimum number of clicks.</p>
+                    <hr>
+                    <div style="display:flex; justify-content:space-between; background:#f8f9fa; padding:10px; border-radius:8px; margin:15px 0;">
+                        <div style="text-align:center">Labels Given: <span id="clickCount_knn" style="color:var(--primary-color); font-weight:bold">0</span></div>
+                        <div style="text-align:center">Remaining: <span id="unlabeledCount_knn" style="color:var(--primary-color); font-weight:bold">0</span></div>
+                        <div style="text-align:center">Accuracy: <span id="accuracy_knn" style="color:var(--primary-color); font-weight:bold">0%</span></div>
+                    </div>
+                </div>
+                <div class="viz-column">
+                    <div id="status_knn" class="unsolved">Status: Start Labeling Data</div>
+                    <div id="vizContainer_knn"></div>
+                    <button class="action-btn" id="newChallenge_knn">New Challenge</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. A* PATHFINDING -->
+    <div id="tab-astar" class="game-tab">
+        <div class="game-wrapper">
+            <h1>A* Pathfinding Heuristic Challenge</h1>
+            <div class="main-content">
+                <div class="left-column">
+                    <p>Goal: Select the best heuristic to find the shortest path from Start (Green) to Goal (Red). Then, analyze the trade-off between path length and the number of cells explored.</p>
+                    <h3>What This Game Teaches:</h3>
+                    <ul>
+                        <li>A* Algorithm: It is a smart way to find the shortest path between two points in a graph. It uses two parts: one part tells us how far we are from the starting point, and the other part tells us how far we are from the goal.</li>
+                        <li>Cost Function (f(n)): The balance between Actual Cost (g(n)) and Heuristic Cost (h(n)).</li>
+                        <li>g(n) (Actual Cost): The distance traveled from the start point to the current cell.</li>
+                        <li>h(n) (Heuristic): The estimated distance from the current cell to the goal. A good heuristic guides the search efficiently.</li>
+                        <li>Heuristic Comparison:
+                            <ul>
+                                <li>Manhattan: Only counts horizontal/vertical steps. Faster exploration, guaranteed shortest path on a grid without diagonal movement.</li>
+                                <li>Euclidean: Straight-line distance. Often less efficient on a grid but common in robotics.</li>
+                                <li>Zero (Dijkstra's): Ignores h(n). Guaranteed shortest path, but explores the largest number of cells (slowest).</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="viz-column">
+                    <div style="background:#f8f8f8; padding:15px; border-radius:8px; margin-bottom:15px; width: 100%; box-sizing: border-box;">
+                        <label>Select Heuristic:</label>
+                        <select id="heuristic-select_astar" style="width:100%; padding:8px; margin-top:5px;">
+                            <option value="manhattan">Manhattan (L1)</option>
+                            <option value="euclidean">Euclidean (L2)</option>
+                            <option value="zero">Zero (Dijkstra)</option>
+                        </select>
+                        <button class="action-btn" id="newMaze_astar">Generate New Maze</button>
+                    </div>
+                    <div style="border:1px dashed var(--primary-color); padding:10px; border-radius:4px; width: 100%; box-sizing: border-box; margin-bottom: 15px;">
+                        <div>Path Length: <span id="path-length_astar" style="font-weight:bold; color:var(--primary-color)">0</span></div>
+                        <div>Cells Explored: <span id="explored-count_astar" style="font-weight:bold; color:var(--primary-color)">0</span></div>
+                        <div>Heuristic: <span id="heuristic-display_astar" style="font-weight:bold; color:var(--primary-color)">Manhattan</span></div>
+                    </div>
+                    <div id="grid-container_astar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MANUAL CLUSTERING -->
+    <div id="tab-manual-k" class="game-tab">
+        <div class="game-wrapper">
+            <h1>The Clustering Challenge</h1>
+            <div class="main-content">
+                <div class="left-column">
+                    <p><strong>Clustering</strong> is a fundamental task in Unsupervised Machine Learning, where the goal is to group similar data points together without prior knowledge of the groups.</p>
+                    <hr>
+                    <h3>The Goal: Find K and Place Centroids</h3>
+                    <ol>
+                        <li><strong>Guess the right K value:</strong> Look at the scatter plot on the right and determine the likely number of distinct clusters (the true K value is hidden).</li>
+                        <li><strong>Set the initial Centroids:</strong> Click on the map to place K centroids close to the visual center of the clusters you see.</li>
+                        <li><strong>Run K-Means:</strong> Press the "Run K-Means" button. K-Means will iteratively refine the centroid positions to minimize the total squared distance (Inertia).</li>
+                    </ol>
+                    <hr>
+                    <h3>Understanding K-Means</h3>
+                    <ol>
+                        <li><strong>Assignment (E-Step):</strong> Each data point is assigned to the nearest centroid.</li>
+                        <li><strong>Update (M-Step):</strong> Each centroid is moved to the mean (average) location of all the points assigned to it.</li>
+                    </ol>
+                    <hr>
+                </div>
+                <div class="viz-column">
+                    <div style="display:flex; gap:10px; width:100%; margin-bottom:10px;">
+                        <div style="background:#e8f5e9; padding:15px; border-radius:8px; flex:1;">
+                            <label>K Value: <span id="kValue_mk" style="font-weight:bold">3</span></label>
+                            <input type="range" id="kInput_mk" min="1" max="6" step="1" value="3" style="width:100%">
+                            <p>Placed: <span id="centroidCount_mk">0</span></p>
+                        </div>
+                        <div style="background:#e8f5e9; padding:15px; border-radius:8px; flex:1;">
+                            <label>Max Iterations: <span id="maxIterValue_mk" style="font-weight:bold">10</span></label>
+                            <input type="range" id="maxIterInput_mk" min="1" max="50" step="1" value="10" style="width:100%">
+                            <p>True K: <span id="trueK_mk">?</span> | Inertia: <span id="inertiaValue_mk">N/A</span></p>
+                        </div>
+                    </div>
+                    <div id="status_mk" class="setup">Status: Choose K and Click to place Centroids.</div>
+                    <div id="vizContainer_mk"></div>
+                    <div style="display:flex; gap:10px; width:100%; margin-top:10px;">
+                        <button class="action-btn" id="runButton_mk" disabled style="flex:1;">Run K-Means</button>
+                        <button class="action-btn" id="resetCentroids_mk" style="background-color:#ff9800; flex:1;">Reset Centroids</button>
+                        <button class="action-btn" id="newChallenge_mk" style="background-color:#6c757d; flex:1;">New Challenge</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. LOGIC GATES -->
+    <div id="tab-logic" class="game-tab">
+        <div class="game-wrapper">
+            <h1>Logic Gate Builder</h1>
+            <p style="text-align:center">Select the correct Logic Gate (AND, OR, or XOR) that matches the target Truth Table outputs.</p>
+            <p style="text-align:center">Logic Gates (AND, OR, XOR) are the fundamental operations of digital circuits and the core functions that a single perceptron or neuron must learn to model.</p>
+            <div class="main-content">
+                <div class="left-column">
+                    <div style="background:#f8f8f8; padding:15px; border-radius:8px; border:2px solid var(--primary-color);">
+                        <label>Choose a Gate:</label>
+                        <select id="gate-selector_lg" style="width:100%; padding:8px; margin-top:5px;">
+                            <option value="AND">AND Gate</option>
+                            <option value="OR">OR Gate</option>
+                            <option value="XOR">XOR Gate</option>
+                        </select>
+                        <button class="action-btn" id="checkSolution_lg">Check Solution</button>
+                        <button class="action-btn" id="newChallenge_lg">New Challenge</button>
+                    </div>
+                    <div style="margin-top:20px; padding:10px; background:#eee; border-radius:8px;">
+                        <h3>How Gates Work:</h3>
+                        <p>Inputs (A, B) must be True (1) or False (0).</p>
+                        <p>The gate produces a single Output (Q).</p>
+                        <p><strong>AND:</strong> Q=1 only if both A and B are 1.</p>
+                        <p><strong>OR:</strong> Q=1 if either A or B (or both) is 1.</p>
+                        <p><strong>XOR:</strong> Q=1 if A or B is 1, but NOT both.</p>
+                    </div>
+                </div>
+                <div class="viz-column">
+                    <div id="challenge-display_lg">Challenge: Match the Target Output.</div>
+                    <table class="truth-table">
+                        <thead>
+                            <tr>
+                                <th>A</th>
+                                <th>B</th>
+                                <th id="current-gate-header_lg">Current (Q)</th>
+                                <th>Target (Q)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="truth-table-body_lg"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.game-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected
+            document.getElementById(tabId).classList.add('active');
+            
+            // Highlight button
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => {
+                if(btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // ==========================================
+        // 1. SIMPLIFIED K-MEANS LOGIC
+        // ==========================================
+        {
+            const VIZ_SIZE = 400;
+            const K_CLUSTERS = 3;
+            const NUM_POINTS = 50; 
+            
+            let dataPoints = [];
+            let centroids = [];
+            let stepCount = 0;
+
+            const vizContainer = document.getElementById('vizContainer_sk');
+            const centroidsNeededSpan = document.getElementById('centroidsNeeded_sk');
+            const stepCountSpan = document.getElementById('stepCount_sk');
+            const inertiaValueSpan = document.getElementById('inertiaValue_sk');
+            const statusText = document.getElementById('statusText_sk');
+            const iterateButton = document.getElementById('iterateButton_sk');
+            const resetButton = document.getElementById('resetButton_sk');
+
+            function distanceSq(p1, p2) {
+                return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
+            }
+
+            function generateCluster(count, centerX, centerY, spread) {
+                let points = [];
+                for (let i = 0; i < count; i++) {
+                    const x = centerX + (Math.random() - 0.5) * spread;
+                    const y = centerY + (Math.random() - 0.5) * spread;
+                    points.push({ x, y, cluster: -1 });
+                }
+                return points;
+            }
+
+            function generateData() {
+                const centers = [{ x: 0.2, y: 0.2 }, { x: 0.8, y: 0.5 }, { x: 0.3, y: 0.8 }];
+                const spread = 0.3;
+                dataPoints = [];
+                centers.forEach(center => {
+                    dataPoints.push(...generateCluster(NUM_POINTS / K_CLUSTERS, center.x, center.y, spread));
+                });
+                dataPoints.forEach((point, index) => {
+                    const element = document.createElement('div');
+                    element.className = 'data-point';
+                    element.id = `sk-point-${index}`;
+                    element.style.left = `${point.x * VIZ_SIZE - 4}px`;
+                    element.style.top = `${point.y * VIZ_SIZE - 4}px`;
+                    vizContainer.appendChild(element);
+                });
+            }
+
+            function placeCentroid(event) {
+                if (centroids.length >= K_CLUSTERS) return;
+                const rect = vizContainer.getBoundingClientRect();
+                const x = (event.clientX - rect.left) / VIZ_SIZE;
+                const y = (event.clientY - rect.top) / VIZ_SIZE;
+                const index = centroids.length;
+                const newCentroid = { x, y, id: index };
+                centroids.push(newCentroid);
+
+                const element = document.createElement('div');
+                element.className = `centroid c${index}`;
+                element.id = `sk-centroid-${index}`;
+                element.textContent = `C${index + 1}`;
+                element.style.left = `${newCentroid.x * VIZ_SIZE - 10}px`;
+                element.style.top = `${newCentroid.y * VIZ_SIZE - 10}px`;
+                vizContainer.appendChild(element);
+
+                centroidsNeededSpan.textContent = K_CLUSTERS - centroids.length;
+                statusText.textContent = `Centroid ${index + 1} placed.`;
+
+                if (centroids.length === K_CLUSTERS) {
+                    iterateButton.disabled = false;
+                    statusText.textContent = "Initialization complete! Click 'Iterate'.";
+                    assignClusters(); 
+                }
+            }
+
+            function assignClusters() {
+                let totalInertia = 0;
+                dataPoints.forEach((point, pIndex) => {
+                    let minDistanceSq = Infinity;
+                    let bestCluster = -1;
+                    centroids.forEach((centroid, cIndex) => {
+                        const distSq = distanceSq(point, centroid);
+                        if (distSq < minDistanceSq) {
+                            minDistanceSq = distSq;
+                            bestCluster = cIndex;
+                        }
+                    });
+                    point.cluster = bestCluster;
+                    totalInertia += minDistanceSq;
+                    const element = document.getElementById(`sk-point-${pIndex}`);
+                    element.className = `data-point cluster-${bestCluster}`;
+                });
+                inertiaValueSpan.textContent = totalInertia.toFixed(4);
+                return totalInertia;
+            }
+
+            function updateCentroids() {
+                let newCentroids = Array(K_CLUSTERS).fill(0).map(() => ({ x: 0, y: 0, count: 0 }));
+                dataPoints.forEach(point => {
+                    if (point.cluster >= 0) {
+                        newCentroids[point.cluster].x += point.x;
+                        newCentroids[point.cluster].y += point.y;
+                        newCentroids[point.cluster].count++;
+                    }
+                });
+                let maxShift = 0;
+                newCentroids.forEach((newC, index) => {
+                    if (newC.count > 0) {
+                        const oldCentroid = centroids[index];
+                        const newX = newC.x / newC.count;
+                        const newY = newC.y / newC.count;
+                        const shiftSq = distanceSq({x: newX, y: newY}, oldCentroid);
+                        maxShift = Math.max(maxShift, shiftSq);
+                        oldCentroid.x = newX;
+                        oldCentroid.y = newY;
+                        const element = document.getElementById(`sk-centroid-${index}`);
+                        element.style.left = `${newX * VIZ_SIZE - 10}px`;
+                        element.style.top = `${newY * VIZ_SIZE - 10}px`;
+                    }
+                });
+                return maxShift;
+            }
+
+            function runKMeansStep() {
+                if (centroids.length < K_CLUSTERS) return;
+                stepCount++;
+                stepCountSpan.textContent = stepCount;
+                assignClusters(); 
+                const maxShift = updateCentroids(); 
+                if (maxShift < 0.0001) {
+                    statusText.textContent = `✅ Converged! Steps: ${stepCount}.`;
+                    iterateButton.disabled = true;
+                }
+            }
+
+            function initializeGame() {
+                vizContainer.innerHTML = '';
+                centroids = [];
+                dataPoints = [];
+                stepCount = 0;
+                stepCountSpan.textContent = 0;
+                inertiaValueSpan.textContent = 'N/A';
+                centroidsNeededSpan.textContent = K_CLUSTERS;
+                iterateButton.disabled = true;
+                statusText.textContent = "Click to place Centroid 1 of 3...";
+                generateData();
+            }
+
+            // Bind Events
+            vizContainer.onclick = placeCentroid;
+            iterateButton.onclick = runKMeansStep;
+            resetButton.onclick = initializeGame;
+            
+            // Init
+            initializeGame();
+        }
+
+        // ==========================================
+        // 2. NEURAL NETWORK LOGIC
+        // ==========================================
+        {
+            const VIZ_SIZE = 400;
+            const RANGE = 2;
+            const OR_GATE_DATA = [
+                { id: 0, x: -1.5, y: -1.5, target: 0 },
+                { id: 1, x: 1.5, y: -1.5, target: 1 },
+                { id: 2, x: -1.5, y: 1.5, target: 1 },
+                { id: 3, x: 1.5, y: 1.5, target: 1 }
+            ];
+            
+            const w1Slider = document.getElementById('w1_nn');
+            const w2Slider = document.getElementById('w2_nn');
+            const biasSlider = document.getElementById('bias_nn');
+            const w1ValueSpan = document.getElementById('w1Value_nn');
+            const w2ValueSpan = document.getElementById('w2Value_nn');
+            const biasValueSpan = document.getElementById('biasValue_nn');
+            const vizContainer = document.getElementById('vizContainer_nn');
+            const accuracySpan = document.getElementById('accuracy_nn');
+            const goalStatusDiv = document.getElementById('goalStatus_nn');
+            const resetButton = document.getElementById('resetButton_nn');
+            const solveButton = document.getElementById('solveButton_nn');
+
+            function mapToPixel(val) {
+                return (val + RANGE) * (VIZ_SIZE / (2 * RANGE));
+            }
+
+            function predict(x1, x2, w1, w2, bias) {
+                return (w1 * x1 + w2 * x2 + bias) > 0 ? 1 : 0; 
+            }
+
+            function updateNetwork() {
+                const w1 = parseFloat(w1Slider.value);
+                const w2 = parseFloat(w2Slider.value);
+                const bias = parseFloat(biasSlider.value);
+
+                w1ValueSpan.textContent = w1.toFixed(2);
+                w2ValueSpan.textContent = w2.toFixed(2);
+                biasValueSpan.textContent = bias.toFixed(2);
+
+                let correctCount = 0;
+                OR_GATE_DATA.forEach(point => {
+                    const prediction = predict(point.x, point.y, w1, w2, bias);
+                    const isCorrect = (prediction === point.target);
+                    const element = document.getElementById(`nn-point-${point.id}`);
+                    element.classList.remove('misclassified', 'correctly-classified');
+                    if (isCorrect) {
+                        correctCount++;
+                        element.classList.add('correctly-classified');
+                    } else {
+                        element.classList.add('misclassified');
+                    }
+                });
+
+                const accuracy = (correctCount / OR_GATE_DATA.length) * 100;
+                accuracySpan.textContent = `${accuracy.toFixed(0)}%`;
+
+                if (correctCount === OR_GATE_DATA.length) {
+                    goalStatusDiv.textContent = "🥳 SUCCESS! 100% Accuracy!";
+                    goalStatusDiv.className = "goal-success";
+                } else {
+                    goalStatusDiv.textContent = "Keep adjusting the parameters!";
+                    goalStatusDiv.className = "goal-fail";
+                }
+            }
+
+            function resetChallenge() {
+                w1Slider.value = 0.5;
+                w2Slider.value = 0.5;
+                biasSlider.value = -0.5;
+                updateNetwork();
+            }
+
+            function solveChallenge() {
+                w1Slider.value = 1.0;
+                w2Slider.value = 1.0;
+                biasSlider.value = 0.5;
+                updateNetwork();
+            }
+
+            function initializeVisualization() {
+                vizContainer.innerHTML = '';
+                OR_GATE_DATA.forEach(point => {
+                    const pointElement = document.createElement('div');
+                    pointElement.id = `nn-point-${point.id}`;
+                    pointElement.className = `data-point ${point.target === 1 ? 'target-1' : 'target-0'}`;
+                    pointElement.textContent = `P${point.id}`;
+                    const x_pixel = mapToPixel(point.x);
+                    const y_pixel = VIZ_SIZE - mapToPixel(point.y);
+                    pointElement.style.left = `${x_pixel - 15}px`; 
+                    pointElement.style.top = `${y_pixel - 15}px`; 
+                    vizContainer.appendChild(pointElement);
+                });
+                updateNetwork();
+            }
+
+            // Bind Events
+            w1Slider.oninput = updateNetwork;
+            w2Slider.oninput = updateNetwork;
+            biasSlider.oninput = updateNetwork;
+            resetButton.onclick = resetChallenge;
+            solveButton.onclick = solveChallenge;
+
+            initializeVisualization();
+        }
+
+        // ==========================================
+        // 3. KNN LOGIC
+        // ==========================================
+        {
+            const VIZ_SIZE = 500;
+            const RANGE = 10; 
+            const K_VALUE = 5;
+            let dataPoints = [];
+            let clickCount = 0;
+
+            const vizContainer = document.getElementById('vizContainer_knn');
+            const clickCountSpan = document.getElementById('clickCount_knn');
+            const unlabeledCountSpan = document.getElementById('unlabeledCount_knn');
+            const accuracySpan = document.getElementById('accuracy_knn');
+            const statusDiv = document.getElementById('status_knn');
+            const newChallengeBtn = document.getElementById('newChallenge_knn');
+
+            function mapToPixel(val) { return (val + RANGE) * (VIZ_SIZE / (2 * RANGE)); }
+            function distance(p1, p2) { return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2)); }
+
+            function classifyKNN(unlabeledPoint, labeledData) {
+                if (labeledData.length < K_VALUE) return majorityVote(labeledData);
+                const distances = labeledData.map(p => ({ point: p, distance: distance(unlabeledPoint, p) }));
+                distances.sort((a, b) => a.distance - b.distance);
+                return majorityVote(distances.slice(0, K_VALUE).map(d => d.point));
+            }
+
+            function majorityVote(points) {
+                let count0 = 0, count1 = 0;
+                points.forEach(p => p.target === 0 ? count0++ : count1++);
+                return count1 >= count0 ? 1 : 0;
+            }
+
+            function checkAccuracy() {
+                let correctCount = 0;
+                let totalUnlabeled = 0;
+                const labeledData = dataPoints.filter(p => p.labeled);
+
+                dataPoints.forEach(point => {
+                    const element = document.getElementById(`knn-point-${point.id}`);
+                    if (!element) return;
+                    element.classList.remove('misclassified');
+                    if (point.labeled) return;
+                    
+                    totalUnlabeled++;
+                    let predictedClass = labeledData.length === 0 ? 0 : classifyKNN(point, labeledData);
+                    if (predictedClass === point.target) correctCount++;
+                    else element.classList.add('misclassified');
+                });
+
+                unlabeledCountSpan.textContent = totalUnlabeled;
+                clickCountSpan.textContent = clickCount;
+                const accuracy = totalUnlabeled > 0 ? (correctCount / totalUnlabeled) * 100 : 100;
+                accuracySpan.textContent = `${accuracy.toFixed(1)}%`;
+
+                if (accuracy === 100 && totalUnlabeled > 0) {
+                    statusDiv.textContent = `🎉 Success! Solved with ${clickCount} labels!`;
+                    statusDiv.className = "solved";
+                } else if (clickCount >= dataPoints.length) {
+                    statusDiv.textContent = "🛑 Failure. Model failed to generalize.";
+                    statusDiv.className = "fail";
+                } else {
+                    statusDiv.textContent = `Status: Labeling Data (k=${K_VALUE})...`;
+                    statusDiv.className = "unsolved";
+                }
+            }
+
+            function handleContainerClick(event) {
+                if (statusDiv.classList.contains('solved') || statusDiv.classList.contains('fail')) return;
+                const vizRect = vizContainer.getBoundingClientRect();
+                const clickX = event.clientX - vizRect.left;
+                const clickY = event.clientY - vizRect.top;
+                let closestPoint = null;
+                let minDistance = Infinity;
+
+                dataPoints.forEach(point => {
+                    if (point.labeled) return;
+                    const x_pixel = mapToPixel(point.x);
+                    const y_pixel = VIZ_SIZE - mapToPixel(point.y);
+                    const dist = Math.sqrt(Math.pow(x_pixel - clickX, 2) + Math.pow(y_pixel - clickY, 2));
+                    if (dist < 15 && dist < minDistance) { 
+                        minDistance = dist;
+                        closestPoint = point;
+                    }
+                });
+
+                if (closestPoint) {
+                    closestPoint.labeled = true;
+                    clickCount++;
+                    const element = document.getElementById(`knn-point-${closestPoint.id}`);
+                    element.className = `data-point ${closestPoint.target === 1 ? 'class-B' : 'class-A'}`;
+                    checkAccuracy();
+                }
+            }
+
+            function generateNewData() {
+                clickCount = 0;
+                vizContainer.innerHTML = '';
+                dataPoints = [];
+                const numPoints = 40;
+                for (let i = 0; i < numPoints; i++) {
+                    const x = (Math.random() * 2 * RANGE * 0.9) - (RANGE * 0.9);
+                    const y = (Math.random() * 2 * RANGE * 0.9) - (RANGE * 0.9);
+                    const target = (x * x + y * y) < 25 ? 0 : 1;
+                    dataPoints.push({ id: i, x, y, target, labeled: false });
+
+                    const pointElement = document.createElement('div');
+                    pointElement.id = `knn-point-${i}`;
+                    pointElement.className = `data-point unlabeled`;
+                    const x_pixel = mapToPixel(x);
+                    const y_pixel = VIZ_SIZE - mapToPixel(y);
+                    pointElement.style.left = `${x_pixel - 6}px`;
+                    pointElement.style.top = `${y_pixel - 6}px`;
+                    vizContainer.appendChild(pointElement);
+                }
+                checkAccuracy();
+            }
+
+            vizContainer.onclick = handleContainerClick;
+            newChallengeBtn.onclick = generateNewData;
+            generateNewData();
+        }
+
+        // ==========================================
+        // 4. A* PATHFINDING LOGIC
+        // ==========================================
+        {
+            const GRID_SIZE = 20;
+            const CELL_SIZE_PX = 20; // Adjusted for container
+            const gridContainer = document.getElementById('grid-container_astar');
+            const heuristicSelect = document.getElementById('heuristic-select_astar');
+            const pathLengthSpan = document.getElementById('path-length_astar');
+            const exploredCountSpan = document.getElementById('explored-count_astar');
+            const heuristicDisplaySpan = document.getElementById('heuristic-display_astar');
+            const newMazeBtn = document.getElementById('newMaze_astar');
+            
+            let grid = [];
+            let startNode, goalNode;
+
+            class PriorityQueue {
+                constructor() { this.elements = []; }
+                isEmpty() { return this.elements.length === 0; }
+                enqueue(element, priority) { this.elements.push({ element, priority }); this.elements.sort((a, b) => a.priority - b.priority); }
+                dequeue() { return this.elements.shift().element; }
+            }
+
+            function getHeuristic(type, node, goal) {
+                const dx = Math.abs(node.col - goal.col);
+                const dy = Math.abs(node.row - goal.row);
+                if (type === 'manhattan') return dx + dy;
+                if (type === 'euclidean') return Math.sqrt(dx * dx + dy * dy);
+                return 0;
+            }
+
+            function runAStar() {
+                grid.flat().forEach(node => {
+                    const element = document.getElementById(`astar-cell-${node.row}-${node.col}`);
+                    element.classList.remove('path', 'visited');
+                });
+                
+                const heuristicType = heuristicSelect.value;
+                heuristicDisplaySpan.textContent = heuristicType.charAt(0).toUpperCase() + heuristicType.slice(1);
+                
+                let frontier = new PriorityQueue();
+                frontier.enqueue(startNode, 0);
+                let cameFrom = new Map();
+                let costSoFar = new Map();
+                costSoFar.set(`${startNode.row}-${startNode.col}`, 0);
+                cameFrom.set(`${startNode.row}-${startNode.col}`, null);
+                let exploredCount = 0;
+
+                while (!frontier.isEmpty()) {
+                    let current = frontier.dequeue();
+                    exploredCount++;
+                    if (current !== startNode && current !== goalNode) {
+                        document.getElementById(`astar-cell-${current.row}-${current.col}`).classList.add('visited');
+                    }
+                    if (current === goalNode) break;
+
+                    const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+                    for (const [dr, dc] of directions) {
+                        const nr = current.row + dr;
+                        const nc = current.col + dc;
+                        if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE) continue;
+                        const neighbor = grid[nr][nc];
+                        if (neighbor.isObstacle) continue;
+
+                        const newCost = costSoFar.get(`${current.row}-${current.col}`) + 1;
+                        const neighborKey = `${nr}-${nc}`;
+                        if (!costSoFar.has(neighborKey) || newCost < costSoFar.get(neighborKey)) {
+                            costSoFar.set(neighborKey, newCost);
+                            const priority = newCost + getHeuristic(heuristicType, neighbor, goalNode);
+                            frontier.enqueue(neighbor, priority);
+                            cameFrom.set(neighborKey, current);
+                        }
+                    }
+                }
+
+                let path = [];
+                let current = goalNode;
+                if (costSoFar.has(`${goalNode.row}-${goalNode.col}`)) {
+                    while (current) {
+                        path.push(current);
+                        current = cameFrom.get(`${current.row}-${current.col}`);
+                    }
+                    path.reverse(); 
+                }
+
+                path.forEach(node => {
+                    if (node !== startNode && node !== goalNode) {
+                        document.getElementById(`astar-cell-${node.row}-${node.col}`).classList.remove('visited');
+                        document.getElementById(`astar-cell-${node.row}-${node.col}`).classList.add('path');
+                    }
+                });
+
+                pathLengthSpan.textContent = path.length > 0 ? path.length - 1 : "N/A";
+                exploredCountSpan.textContent = exploredCount;
+            }
+
+            function createGrid() {
+                gridContainer.innerHTML = '';
+                grid = [];
+                gridContainer.style.width = `${GRID_SIZE * CELL_SIZE_PX}px`;
+                gridContainer.style.height = `${GRID_SIZE * CELL_SIZE_PX}px`;
+                gridContainer.style.gridTemplateColumns = `repeat(${GRID_SIZE}, ${CELL_SIZE_PX}px)`;
+                gridContainer.style.gridTemplateRows = `repeat(${GRID_SIZE}, ${CELL_SIZE_PX}px)`;
+
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    grid[r] = [];
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        const node = { row: r, col: c, isObstacle: false };
+                        grid[r][c] = node;
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.id = `astar-cell-${r}-${c}`;
+                        gridContainer.appendChild(cell);
+                    }
+                }
+            }
+
+            function generateMaze() {
+                grid.flat().forEach(node => {
+                    node.isObstacle = false;
+                    document.getElementById(`astar-cell-${node.row}-${node.col}`).className = 'grid-cell';
+                });
+                startNode = grid[0][0];
+                goalNode = grid[GRID_SIZE - 1][GRID_SIZE - 1];
+                document.getElementById(`astar-cell-0-0`).classList.add('start');
+                document.getElementById(`astar-cell-${GRID_SIZE-1}-${GRID_SIZE-1}`).classList.add('goal');
+
+                const obstacleCount = Math.floor(GRID_SIZE * GRID_SIZE * 0.2);
+                for (let i = 0; i < obstacleCount; i++) {
+                    let r, c;
+                    do {
+                        r = Math.floor(Math.random() * GRID_SIZE);
+                        c = Math.floor(Math.random() * GRID_SIZE);
+                    } while ((r === 0 && c === 0) || (r === GRID_SIZE-1 && c === GRID_SIZE-1) || grid[r][c].isObstacle);
+                    grid[r][c].isObstacle = true;
+                    document.getElementById(`astar-cell-${r}-${c}`).classList.add('obstacle');
+                }
+                runAStar();
+            }
+
+            heuristicSelect.onchange = runAStar;
+            newMazeBtn.onclick = generateMaze;
+            createGrid();
+            generateMaze();
+        }
+
+        // ==========================================
+        // 5. MANUAL CLUSTERING LOGIC
+        // ==========================================
+        {
+            const VIZ_SIZE = 500;
+            const RANGE = 10;
+            const CLUSTER_COLORS = ['color-0', 'color-1', 'color-2', 'color-3', 'color-4', 'color-5'];
+            let dataPoints = [];
+            let centroids = [];
+            let trueK = 0;
+
+            const vizContainer = document.getElementById('vizContainer_mk');
+            const kInput = document.getElementById('kInput_mk');
+            const maxIterInput = document.getElementById('maxIterInput_mk');
+            const kValueSpan = document.getElementById('kValue_mk');
+            const maxIterValueSpan = document.getElementById('maxIterValue_mk');
+            const inertiaValueSpan = document.getElementById('inertiaValue_mk');
+            const trueKSpan = document.getElementById('trueK_mk');
+            const statusDiv = document.getElementById('status_mk');
+            const centroidCountSpan = document.getElementById('centroidCount_mk');
+            const runButton = document.getElementById('runButton_mk');
+            const resetButton = document.getElementById('resetCentroids_mk');
+            const newChallengeBtn = document.getElementById('newChallenge_mk');
+
+            function mapToPixel(val) { return (val + RANGE) * (VIZ_SIZE / (2 * RANGE)); }
+            function mapFromPixel(pixel) { return (pixel / VIZ_SIZE) * (2 * RANGE) - RANGE; }
+            function distanceSq(p1, p2) { return Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2); }
+
+            function placeCentroid(x, y) {
+                const K = parseInt(kInput.value);
+                if (centroids.length < K) {
+                    centroids.push({ x, y, id: centroids.length });
+                    updateVisualization();
+                    updateSetupStatus();
+                }
+            }
+
+            function resetCentroids() {
+                centroids = [];
+                dataPoints.forEach(p => p.cluster = -1);
+                updateVisualization();
+                updateSetupStatus();
+            }
+
+            function assignClusters() {
+                let inertia = 0;
+                dataPoints.forEach(point => {
+                    let minDistanceSq = Infinity;
+                    let closest = -1;
+                    centroids.forEach(c => {
+                        const d = distanceSq(point, c);
+                        if (d < minDistanceSq) { minDistanceSq = d; closest = c.id; }
+                    });
+                    point.cluster = closest;
+                    inertia += minDistanceSq;
+                });
+                return inertia;
+            }
+
+            function updateCentroids() {
+                const K = centroids.length;
+                const sums = Array(K).fill(0).map(() => ({ x: 0, y: 0, count: 0 }));
+                let moved = 0;
+                dataPoints.forEach(p => {
+                    if (p.cluster !== -1) {
+                        sums[p.cluster].x += p.x;
+                        sums[p.cluster].y += p.y;
+                        sums[p.cluster].count++;
+                    }
+                });
+                centroids.forEach((c, i) => {
+                    if (sums[i].count > 0) {
+                        const nx = sums[i].x / sums[i].count;
+                        const ny = sums[i].y / sums[i].count;
+                        if (distanceSq(c, {x: nx, y: ny}) > 0.001) moved++;
+                        c.x = nx; c.y = ny;
+                    }
+                });
+                return moved > 0;
+            }
+
+            function checkAssignmentMatch() {
+                if (centroids.length !== trueK) return false;
+
+                const trueAssignments = dataPoints.map(p => p.trueCluster);
+                const currentAssignments = dataPoints.map(p => p.cluster);
+                
+                if (currentAssignments.some(a => a === -1)) return false;
+
+                const mapping = {};
+                for (let i = 0; i < dataPoints.length; i++) {
+                    const trueId = trueAssignments[i];
+                    const currentId = currentAssignments[i];
+
+                    if (!mapping.hasOwnProperty(trueId)) {
+                        mapping[trueId] = currentId;
+                    } else if (mapping[trueId] !== currentId) {
+                        return false;
+                    }
+                }
+                
+                const mappedCurrentIDs = Object.values(mapping);
+                const uniqueMappedIDs = [...new Set(mappedCurrentIDs)];
+                
+                return uniqueMappedIDs.length === trueK;
+            }
+
+            function runKMeans() {
+                const K = parseInt(kInput.value);
+                if (centroids.length !== K) return;
+                const maxIter = parseInt(maxIterInput.value);
+                let inertia = 0;
+                let converged = false;
+                for (let i = 0; i < maxIter; i++) {
+                    inertia = assignClusters();
+                    converged = !updateCentroids();
+                    if (converged) break;
+                }
+                updateVisualization();
+                
+                const correctKValue = (trueK === K);
+                const perfectAssignment = checkAssignmentMatch();
+
+                if (perfectAssignment && correctKValue) {
+                    statusDiv.textContent = `🎉 SOLVED! K=${K} is correct, and your placement led to a perfect solution!`;
+                    statusDiv.className = "solved";
+                    trueKSpan.textContent = trueK;
+                } else if (!correctKValue) {
+                    statusDiv.textContent = `K=${K} is INCORRECT. Your placement was good, but try a different K value. Inertia: ${inertia.toFixed(2)}`;
+                    statusDiv.className = "fail";
+                } else if (correctKValue && !perfectAssignment) {
+                     statusDiv.textContent = `K=${K} is correct, but the centroids settled on a poor local minimum. Click RESET, and place them closer to the visual centers! Inertia: ${inertia.toFixed(2)}`;
+                     statusDiv.className = "unsolved";
+                } else {
+                    statusDiv.textContent = `Clustering converged in ${maxIter} steps. Inertia: ${inertia.toFixed(2)}. Check K and your placement.`;
+                    statusDiv.className = "unsolved";
+                }
+            }
+
+            function updateSetupStatus() {
+                const K = parseInt(kInput.value);
+                const placed = centroids.length;
+                centroidCountSpan.textContent = placed;
+                if (placed < K) {
+                    statusDiv.textContent = `SETUP: Click on the map to place ${K - placed} more centroid(s).`;
+                    statusDiv.className = "setup";
+                    runButton.disabled = true;
+                } else {
+                    statusDiv.textContent = `READY: ${K} Centroids Placed. Press "Run K-Means Steps" to refine.`;
+                    statusDiv.className = "unsolved";
+                    runButton.disabled = false;
+                }
+            }
+
+            function updateVisualization() {
+                vizContainer.innerHTML = '';
+                dataPoints.forEach(p => {
+                    const el = document.createElement('div');
+                    el.className = `data-point ${p.cluster === -1 ? 'unassigned' : 'color-' + (p.cluster % 6)}`;
+                    el.style.left = `${mapToPixel(p.x) - 4}px`;
+                    el.style.top = `${VIZ_SIZE - mapToPixel(p.y) - 4}px`;
+                    vizContainer.appendChild(el);
+                });
+                centroids.forEach(c => {
+                    const el = document.createElement('div');
+                    el.className = `centroid color-${c.id % 6}`;
+                    el.textContent = `C${c.id}`;
+                    el.style.left = `${mapToPixel(c.x) - 8}px`;
+                    el.style.top = `${VIZ_SIZE - mapToPixel(c.y) - 8}px`;
+                    vizContainer.appendChild(el);
+                });
+                kValueSpan.textContent = kInput.value;
+                maxIterValueSpan.textContent = maxIterInput.value;
+                if (centroids.length > 0 && dataPoints.every(p => p.cluster !== -1)) {
+                    inertiaValueSpan.textContent = assignClusters().toFixed(2);
+                } else {
+                    inertiaValueSpan.textContent = 'N/A';
+                }
+            }
+
+            function generateNewData() {
+                dataPoints = [];
+                trueK = Math.floor(Math.random() * 4) + 2;
+                const trueCentroids = [];
+                for (let i = 0; i < trueK; i++) trueCentroids.push({ x: (Math.random()*10)-5, y: (Math.random()*10)-5 });
+                
+                for (let i = 0; i < trueK; i++) {
+                    for (let j = 0; j < 20; j++) {
+                        dataPoints.push({
+                            x: trueCentroids[i].x + (Math.random()-0.5)*3,
+                            y: trueCentroids[i].y + (Math.random()-0.5)*3,
+                            cluster: -1,
+                            trueCluster: i,
+                            id: dataPoints.length
+                        });
+                    }
+                }
+                kInput.value = 3;
+                centroids = [];
+                trueKSpan.textContent = "?";
+                updateVisualization();
+                updateSetupStatus();
+            }
+
+            vizContainer.onclick = (e) => {
+                const rect = vizContainer.getBoundingClientRect();
+                placeCentroid(mapFromPixel(e.clientX - rect.left), mapFromPixel(VIZ_SIZE - (e.clientY - rect.top)));
+            };
+            kInput.oninput = resetCentroids;
+            maxIterInput.oninput = updateVisualization;
+            runButton.onclick = runKMeans;
+            resetButton.onclick = resetCentroids;
+            newChallengeBtn.onclick = generateNewData;
+            generateNewData();
+        }
+
+        // ==========================================
+        // 6. LOGIC GATE LOGIC
+        // ==========================================
+        {
+            const INPUT_COMBINATIONS = [[0, 0], [0, 1], [1, 0], [1, 1]];
+            let targetGate = '';
+            let targetOutputs = [];
+
+            const gateSelector = document.getElementById('gate-selector_lg');
+            const checkBtn = document.getElementById('checkSolution_lg');
+            const newBtn = document.getElementById('newChallenge_lg');
+            const tableBody = document.getElementById('truth-table-body_lg');
+            const display = document.getElementById('challenge-display_lg');
+            const currentHeader = document.getElementById('current-gate-header_lg');
+
+            function calculateGateOutput(gateType, A, B) {
+                if (gateType === 'AND') return A && B ? 1 : 0;
+                if (gateType === 'OR') return A || B ? 1 : 0;
+                if (gateType === 'XOR') return A !== B ? 1 : 0;
+                return 0;
+            }
+
+            function generateChallenge() {
+                const gates = ['AND', 'OR', 'XOR'];
+                targetGate = gates[Math.floor(Math.random() * gates.length)];
+                targetOutputs = INPUT_COMBINATIONS.map(([A, B]) => calculateGateOutput(targetGate, A, B));
+                
+                tableBody.innerHTML = '';
+                INPUT_COMBINATIONS.forEach(([A, B], index) => {
+                    const row = tableBody.insertRow();
+                    row.innerHTML = `<td>${A}</td><td>${B}</td><td class="output-current">---</td><td class="output-target">${targetOutputs[index]}</td>`;
+                });
+                gateSelector.value = 'AND';
+                updateOutputs();
+                display.innerHTML = 'Challenge: Match the Target Output (Q) column.';
+            }
+
+            function updateOutputs() {
+                const selectedGate = gateSelector.value;
+                currentHeader.textContent = `${selectedGate} Output (Q)`;
+                const rows = tableBody.children;
+                INPUT_COMBINATIONS.forEach(([A, B], index) => {
+                    const currentCell = rows[index].children[2];
+                    currentCell.className = 'output-current';
+                    currentCell.textContent = calculateGateOutput(selectedGate, A, B);
+                });
+            }
+
+            function checkSolution() {
+                const selectedGate = gateSelector.value;
+                const rows = tableBody.children;
+                let isCorrect = true;
+                INPUT_COMBINATIONS.forEach(([A, B], index) => {
+                    const current = calculateGateOutput(selectedGate, A, B);
+                    const target = targetOutputs[index];
+                    const cell = rows[index].children[2];
+                    cell.className = current === target ? 'correct' : 'incorrect';
+                    if (current !== target) isCorrect = false;
+                });
+                display.innerHTML = isCorrect ? 
+                    `<span style="color:#27ae66; font-weight:bold">✅ CORRECT! The gate was ${targetGate}.</span>` : 
+                    `<span style="color:#e74c3c; font-weight:bold">❌ INCORRECT. Try again.</span>`;
+            }
+
+            gateSelector.onchange = updateOutputs;
+            checkBtn.onclick = checkSolution;
+            newBtn.onclick = generateChallenge;
+            generateChallenge();
+        }
+    </script>
+</body>
+</html>
